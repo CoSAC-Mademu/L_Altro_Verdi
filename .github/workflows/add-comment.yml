@@ -1,38 +1,52 @@
-name: Aggiungi Commento
+name: Aggiungi Commento o Meme
 
 on:
   workflow_dispatch:
     inputs:
       message:
         description: "Commento da aggiungere"
-        required: true
+        required: false
+        type: string
+      filename:
+        description: "Nome del file immagine"
+        required: false
         type: string
 
 jobs:
-  add_comment:
+  add_comment_or_meme:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Aggiungi il commento
+      - name: Aggiungi Commento e/o Meme
         env:
-          GITHUB_TOKEN: ${{ secrets.TKN_LAV }} # Usa il Secret salvato
+          GITHUB_TOKEN: ${{ secrets.TKN_LAV }}
         run: |
           echo "Recupero i commenti esistenti..."
           if [ ! -f comments.json ]; then
             echo "[]" > comments.json
           fi
 
-          jq --arg message "${{ github.event.inputs.message }}" \
-             --arg date "$(date)" \
-             '. + [{message: $message, date: $date}]' comments.json > updated_comments.json
-          mv updated_comments.json comments.json
+          if [ -n "${{ github.event.inputs.message }}" ]; then
+            jq --arg message "${{ github.event.inputs.message }}" \
+               --arg date "$(date)" \
+               '. + [{message: $message, date: $date}]' comments.json > updated_comments.json
+            mv updated_comments.json comments.json
+          fi
 
-          echo "Salvo i commenti aggiornati..."
+          if [ -n "${{ github.event.inputs.filename }}" ]; then
+            if [ ! -d images ]; then
+              mkdir images
+            fi
+            echo "Aggiungo immagine..."
+            mv "${{ github.event.inputs.filename }}" "./images/${{ github.event.inputs.filename }}"
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add comments.json
-          git commit -m "Aggiunto nuovo commento: ${{ github.event.inputs.message }}"
+          git add images/*
+          git commit -m "Aggiunto commento o meme"
           git push
