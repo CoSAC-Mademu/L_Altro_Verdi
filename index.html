@@ -129,93 +129,66 @@
     </div>
 
     <script>
-const WORKFLOW_URL = 'https://api.github.com/repos/CoSAC-Mademu/L_Altro_Verdi/actions/workflows/add-comment.yml/dispatches';
-const REPO_URL = 'https://api.github.com/repos/CoSAC-Mademu/L_Altro_Verdi/contents';
+        // Array temporaneo per contenere i messaggi e le immagini
+        let slideshowData = [];
 
-async function sendMessage() {
-    const message = document.getElementById('message').value;
-    const fileInput = document.getElementById('file');
-    const file = fileInput.files[0];
+        // Funzione per inviare il messaggio o il meme
+        function sendMessage() {
+            const message = document.getElementById('message').value.trim();
+            const fileInput = document.getElementById('file');
+            const file = fileInput.files[0];
 
-    if (!message.trim() && !file) {
-        alert('Dai, scrivi un messaggio o carica un meme! (se ti va)');
-        return;
-    }
+            if (!message && !file) {
+                alert('Dai, scrivi un messaggio o carica un meme! (se ti va)');
+                return;
+            }
 
-    try {
-        const response = await fetch(WORKFLOW_URL, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                ref: 'main', // Nome del branch
-                inputs: {
-                    message: message || '',
-                    filename: file ? file.name : null
-                }
-            })
-        });
+            if (message) {
+                // Aggiunge il messaggio allo slideshow
+                slideshowData.push({ type: 'text', content: message });
+            }
 
-        if (response.ok) {
-            alert('Messaggio inviato, grazie!');
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    // Aggiunge l'immagine allo slideshow
+                    slideshowData.push({ type: 'image', content: e.target.result });
+                    updateSlideshow();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                updateSlideshow();
+            }
+
+            // Reset dei campi di input
             document.getElementById('message').value = '';
             fileInput.value = '';
-        } else {
-            const result = await response.json();
-            console.error('Errore API:', result);
-            alert(`Errore durante l'invio del messaggio: ${result.message}`);
         }
-    } catch (error) {
-        console.error('Errore:', error);
-        alert('Si è verificato un errore.');
-    }
-}
 
+        // Funzione per aggiornare lo slideshow
+        function updateSlideshow() {
+            const slideshowContent = document.getElementById('slideshow-content');
+            slideshowContent.innerHTML = '';
 
-        async function fetchSlideshowData() {
-            try {
-                // Recupera i commenti
-                const commentsResponse = await fetch(`${REPO_URL}/comments.json`);
-                if (!commentsResponse.ok) {
-                    throw new Error('Impossibile caricare i commenti');
-                }
-                const commentsData = await commentsResponse.json();
-                const comments = commentsData.content ? JSON.parse(atob(commentsData.content)) : [];
-
-                // Recupera le immagini
-                const imagesResponse = await fetch(`${REPO_URL}/images`);
-                if (!imagesResponse.ok) {
-                    throw new Error('Impossibile caricare le immagini');
-                }
-                const imagesData = await imagesResponse.json();
-
-                const slideshowContent = document.getElementById('slideshow-content');
-                slideshowContent.innerHTML = '';
-
-                // Aggiungi i commenti allo slideshow
-                comments.forEach(comment => {
-                    const textDiv = document.createElement('div');
-                    textDiv.textContent = comment.message;
-                    slideshowContent.appendChild(textDiv);
-                });
-
-                // Aggiungi le immagini allo slideshow
-                imagesData.forEach(image => {
-                    const imgDiv = document.createElement('div');
+            slideshowData.forEach(item => {
+                const div = document.createElement('div');
+                if (item.type === 'text') {
+                    div.textContent = item.content;
+                } else if (item.type === 'image') {
                     const img = document.createElement('img');
-                    img.src = image.download_url; // URL diretto all'immagine
-                    imgDiv.appendChild(img);
-                    slideshowContent.appendChild(imgDiv);
-                });
-            } catch (error) {
-                console.error('Errore nel caricamento dei dati:', error);
-            }
+                    img.src = item.content;
+                    div.appendChild(img);
+                }
+                slideshowContent.appendChild(div);
+            });
         }
 
-        // Carica inizialmente i dati nello slideshow
-        fetchSlideshowData();
+        // Funzione per resettare lo slideshow ogni TOT secondi
+        setInterval(() => {
+            slideshowData = [];
+            updateSlideshow();
+        }, 0); // Inserisci il valore di reset in millisecondi
     </script>
 </body>
 </html>
+
