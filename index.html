@@ -115,7 +115,7 @@
 </head>
 <body>
     <h1>L'Altro Verdi</h1>
-    <h2>Condividi il tuo pensiero o un meme!</h2>
+    <h2>Condividi un tuo pensiero o un meme!</h2>
     <div class="container">
         <textarea id="message" placeholder="Scrivi qui il tuo messaggio (opzionale)..."></textarea>
         <input type="file" id="file" accept="image/png, image/jpeg">
@@ -137,7 +137,7 @@
             const file = fileInput.files[0];
 
             if (!message.trim() && !file) {
-                alert('Devi scrivere un messaggio o caricare un meme!');
+                alert('Dai, scrivi un messaggio o carica un meme! (se ti va)');
                 return;
             }
 
@@ -167,7 +167,7 @@
                 );
 
                 if (response.ok) {
-                    alert('Messaggio inviato!');
+                    alert('Messaggio inviato, grazie!');
                     document.getElementById('message').value = '';
                     fileInput.value = '';
                     fetchSlideshowData(); // Aggiorna lo slideshow
