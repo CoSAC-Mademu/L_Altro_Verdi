@@ -1,0 +1,36 @@
+name: Aggiungi Commento
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Commento da aggiungere"
+        required: true
+        type: string
+
+jobs:
+  add_comment:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Aggiungi il commento
+        run: |
+          echo "Recupero i commenti esistenti..."
+          if [ ! -f comments.json ]; then
+            echo "[]" > comments.json
+          fi
+
+          jq --arg message "${{ github.event.inputs.message }}" \
+             --arg date "$(date)" \
+             '. + [{message: $message, date: $date}]' comments.json > updated_comments.json
+          mv updated_comments.json comments.json
+
+          echo "Salvo i commenti aggiornati..."
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add comments.json
+          git commit -m "Aggiunto nuovo commento: ${{ github.event.inputs.message }}"
+          git push
