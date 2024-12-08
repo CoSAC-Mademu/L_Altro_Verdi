@@ -129,48 +129,49 @@
     </div>
 
     <script>
-        const WORKFLOW_URL = 'https://api.github.com/repos/CoSAC-Mademu/L_Altro_Verdi/actions/workflows/add-comment.yml/dispatches';
-        const REPO_URL = 'https://api.github.com/repos/CoSAC-Mademu/L_Altro_Verdi/contents';
+const WORKFLOW_URL = 'https://api.github.com/repos/CoSAC-Mademu/L_Altro_Verdi/actions/workflows/add-comment.yml/dispatches';
 
-        async function sendMessage() {
-            const message = document.getElementById('message').value;
-            const fileInput = document.getElementById('file');
-            const file = fileInput.files[0];
+async function sendMessage() {
+    const message = document.getElementById('message').value;
+    const fileInput = document.getElementById('file');
+    const file = fileInput.files[0];
 
-            if (!message.trim() && !file) {
-                alert('Dai, scrivi un messaggio o carica un meme! (se ti va)');
-                return;
-            }
+    if (!message.trim() && !file) {
+        alert('Dai, scrivi un messaggio o carica un meme! (se ti va)');
+        return;
+    }
 
-            try {
-            const response = await fetch(WORKFLOW_URL, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    ref: 'main', // Nome del branch
-                    inputs: {
-                        message: message || '',
-                        filename: file ? file.name : null
-                    }
-                })
-            });
-
-                if (response.ok) {
-                    alert('Messaggio inviato, grazie!');
-                    document.getElementById('message').value = '';
-                    fileInput.value = '';
-                    fetchSlideshowData(); // Aggiorna lo slideshow
-                } else {
-                    alert('Errore durante l\'invio del messaggio. Controlla il workflow.');
+    try {
+        const response = await fetch(WORKFLOW_URL, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ref: 'main', // Nome del branch
+                inputs: {
+                    message: message || '',
+                    filename: file ? file.name : null
                 }
-            } catch (error) {
-                console.error('Errore:', error);
-                alert('Si è verificato un errore.');
-            }
+            })
+        });
+
+        if (response.ok) {
+            alert('Messaggio inviato, grazie!');
+            document.getElementById('message').value = '';
+            fileInput.value = '';
+        } else {
+            const result = await response.json();
+            console.error('Errore API:', result);
+            alert(`Errore durante l'invio del messaggio: ${result.message}`);
         }
+    } catch (error) {
+        console.error('Errore:', error);
+        alert('Si è verificato un errore.');
+    }
+}
+
 
         async function fetchSlideshowData() {
             try {
