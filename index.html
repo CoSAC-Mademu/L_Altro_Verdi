@@ -131,7 +131,6 @@
     <script>
 const BACKEND_URL = "https://backlaltroverdi.glitch.me"; // URL del tuo backend pubblico
 
-// Invia un messaggio o carica un meme
 async function sendMessage() {
     const message = document.getElementById('message').value;
     const fileInput = document.getElementById('file');
@@ -149,7 +148,7 @@ async function sendMessage() {
             fileContent = e.target.result.split(",")[1]; // Elimina la parte "data:image/png;base64,"
         };
         reader.readAsDataURL(file);
-        await new Promise(resolve => reader.onloadend = resolve);
+        await new Promise(resolve => { reader.onloadend = resolve; }); // CORRETTO: aggiunto oggetto {}
     }
 
     try {
