@@ -167,6 +167,7 @@ async function sendMessage() {
             alert('Messaggio inviato con successo!');
             document.getElementById('message').value = '';
             fileInput.value = '';
+            fetchSlideshowData(); // Aggiorna lo slideshow
         } else {
             const result = await response.json();
             alert(`Errore durante l'invio: ${result.error}`);
@@ -208,9 +209,6 @@ async function fetchSlideshowData() {
         alert('Impossibile caricare i dati. Riprova più tardi.');
     }
 }
-
-// Aggiorna lo slideshow periodicamente
-setInterval(fetchSlideshowData, 30000); // Aggiorna ogni 30 secondi
 
 // Carica inizialmente i dati nello slideshow
 fetchSlideshowData();
