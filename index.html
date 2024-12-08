@@ -22,20 +22,43 @@
             font-size: 3rem;
         }
 
-        textarea {
+        h2 {
+            color: #fff;
+            font-size: 1.8rem;
+            margin: 10px 0 20px;
+        }
+
+        .container {
             width: 90%;
             max-width: 800px;
-            height: 100px;
-            background-color: #333;
-            color: #fff;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        textarea, input[type="file"] {
+            width: 100%;
             margin-bottom: 10px;
             padding: 10px;
-            border: 1px solid #f39c12;
             border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            height: 100px;
+            background-color: #333;
+            border: 1px solid #f39c12;
+            color: #fff;
+        }
+
+        input[type="file"] {
+            background-color: #444;
+            border: 1px solid #f39c12;
+            color: #fff;
         }
 
         button {
             background-color: #f39c12;
+            color: #000;
             border: none;
             padding: 10px 20px;
             font-size: 1rem;
@@ -43,20 +66,85 @@
             border-radius: 5px;
             font-family: 'Oswald', sans-serif;
         }
+
+        button:hover {
+            background-color: #e67e22;
+        }
+
+        .slideshow {
+            margin-top: 20px;
+            overflow: hidden;
+            height: 250px;
+            background-color: #111;
+            border: 1px solid #f39c12;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .slideshow-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            animation: slide 10s linear infinite;
+        }
+
+        .slideshow-content div {
+            text-align: center;
+            padding: 10px;
+            color: #fff;
+        }
+
+        .slideshow-content img {
+            max-width: 100%;
+            max-height: 200px;
+            margin: 0 auto;
+            display: block;
+            border: 2px solid #f39c12;
+            border-radius: 5px;
+        }
+
+        @keyframes slide {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100%); }
+        }
     </style>
 </head>
 <body>
     <h1>L'Altro Verdi</h1>
-    <textarea id="message" placeholder="Scrivi qui il tuo messaggio..."></textarea>
-    <button onclick="sendMessage()">Invia</button>
+    <h2>Condividi il tuo pensiero o un meme!</h2>
+    <div class="container">
+        <textarea id="message" placeholder="Scrivi qui il tuo messaggio (opzionale)..."></textarea>
+        <input type="file" id="file" accept="image/png, image/jpeg">
+        <button onclick="sendMessage()">Invia</button>
+    </div>
+
+    <div class="slideshow">
+        <div id="slideshow-content" class="slideshow-content">
+            <!-- I messaggi e i meme verranno caricati dinamicamente qui -->
+        </div>
+    </div>
 
     <script>
+        const REPO_URL = 'https://api.github.com/repos/tuo-username/tuo-repository/contents';
+
         async function sendMessage() {
             const message = document.getElementById('message').value;
+            const fileInput = document.getElementById('file');
+            const file = fileInput.files[0];
 
-            if (message.trim() === '') {
-                alert('Il messaggio non può essere vuoto!');
+            if (!message.trim() && !file) {
+                alert('Devi scrivere un messaggio o caricare un meme!');
                 return;
+            }
+
+            const formData = new FormData();
+            formData.append('message', message);
+            if (file) {
+                formData.append('file', file);
             }
 
             try {
@@ -65,13 +153,15 @@
                     {
                         method: 'POST',
                         headers: {
-                            'Authorization': `Bearer GITHUB_TOKEN_DA_ACTIONS`,
                             'Accept': 'application/vnd.github.v3+json',
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             ref: 'main',
-                            inputs: { message }
+                            inputs: {
+                                message: message,
+                                filename: file ? file.name : null
+                            }
                         })
                     }
                 );
@@ -79,6 +169,8 @@
                 if (response.ok) {
                     alert('Messaggio inviato!');
                     document.getElementById('message').value = '';
+                    fileInput.value = '';
+                    fetchSlideshowData(); // Aggiorna lo slideshow
                 } else {
                     alert('Errore durante l\'invio del messaggio.');
                 }
@@ -87,6 +179,40 @@
                 alert('Si è verificato un errore.');
             }
         }
+
+        async function fetchSlideshowData() {
+            try {
+                const commentsResponse = await fetch(`${REPO_URL}/comments.json`);
+                const commentsData = await commentsResponse.json();
+                const comments = JSON.parse(atob(commentsData.content));
+
+                const imagesResponse = await fetch(`${REPO_URL}/images`);
+                const imagesData = await imagesResponse.json();
+
+                const slideshowContent = document.getElementById('slideshow-content');
+                slideshowContent.innerHTML = '';
+
+                comments.forEach(comment => {
+                    const textDiv = document.createElement('div');
+                    textDiv.textContent = comment.message;
+                    slideshowContent.appendChild(textDiv);
+                });
+
+                imagesData.forEach(image => {
+                    const imgDiv = document.createElement('div');
+                    const img = document.createElement('img');
+                    img.src = image.download_url;
+                    imgDiv.appendChild(img);
+                    slideshowContent.appendChild(imgDiv);
+                });
+            } catch (error) {
+                console.error('Errore nel caricamento dei dati:', error);
+            }
+        }
+
+        // Carica inizialmente i dati nello slideshow
+        fetchSlideshowData();
     </script>
 </body>
 </html>
+
