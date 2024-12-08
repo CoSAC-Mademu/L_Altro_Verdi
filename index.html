@@ -129,7 +129,7 @@
     </div>
 
     <script>
-        const REPO_URL = 'https://api.github.com/repos/tuo-username/tuo-repository/contents';
+        const REPO_URL = 'https://api.github.com/repos/CoSAC-Mademu/L_Altro_Verdi';
 
         async function sendMessage() {
             const message = document.getElementById('message').value;
@@ -149,7 +149,7 @@
 
             try {
                 const response = await fetch(
-                    'https://api.github.com/repos/tuo-username/tuo-repository/actions/workflows/add-comment.yml/dispatches',
+                    'https://api.github.com/repos/CoSAC-Mademu/L_Altro_Verdi/actions/workflows/add-comment.yml/dispatches',
                     {
                         method: 'POST',
                         headers: {
