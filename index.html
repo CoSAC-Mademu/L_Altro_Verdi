@@ -146,13 +146,14 @@
                 const response = await fetch(WORKFLOW_URL, {
                     method: 'POST',
                     headers: {
+                        'Authorization': 'Bearer TKN_LAV', // Usa il tuo PAT
                         'Accept': 'application/vnd.github.v3+json',
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         ref: 'main',
                         inputs: {
-                            message: message,
+                            message: message || '',
                             filename: file ? file.name : null
                         }
                     })
