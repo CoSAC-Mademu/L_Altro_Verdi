@@ -17,6 +17,8 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Aggiungi il commento
+        env:
+          GITHUB_TOKEN: ${{ secrets.TKN_LAV }} # Usa il Secret salvato
         run: |
           echo "Recupero i commenti esistenti..."
           if [ ! -f comments.json ]; then
