@@ -7,9 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #000; /* Nero dello sfondo */
-            color: #fff; /* Colore del testo */
-            font-family: 'Oswald', sans-serif; /* Font simile alla locandina */
+            background-color: #000;
+            color: #fff;
+            font-family: 'Oswald', sans-serif;
             margin: 0;
             padding: 0;
             text-align: center;
@@ -17,39 +17,25 @@
 
         h1 {
             font-family: 'Anton', sans-serif;
-            color: #f39c12; /* Arancione */
+            color: #f39c12;
             margin: 20px 0;
             font-size: 3rem;
         }
 
-        h2 {
-            color: #fff;
-            font-size: 1.8rem;
-            margin: 10px 0 20px;
-        }
-
-        .container {
+        textarea {
             width: 90%;
             max-width: 800px;
-            margin: 0 auto;
-            text-align: left;
-        }
-
-        textarea {
-            width: 100%;
             height: 100px;
-            background-color: #333; /* Scuro per i campi */
-            border: 1px solid #f39c12; /* Arancione */
+            background-color: #333;
             color: #fff;
-            font-size: 1rem;
             margin-bottom: 10px;
             padding: 10px;
+            border: 1px solid #f39c12;
             border-radius: 5px;
         }
 
         button {
-            background-color: #f39c12; /* Arancione */
-            color: #000; /* Testo scuro per contrasto */
+            background-color: #f39c12;
             border: none;
             padding: 10px 20px;
             font-size: 1rem;
@@ -57,38 +43,14 @@
             border-radius: 5px;
             font-family: 'Oswald', sans-serif;
         }
-
-        button:hover {
-            background-color: #e67e22; /* Effetto hover più scuro */
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        li {
-            background-color: #333; /* Scuro */
-            margin: 10px 0;
-            padding: 10px;
-            border-left: 5px solid #f39c12; /* Accento arancione */
-            border-radius: 5px;
-        }
     </style>
 </head>
 <body>
     <h1>L'Altro Verdi</h1>
-    <h2>Lascia un Pensiero sul Cineforum!</h2>
-    <div class="container">
-        <textarea id="message" placeholder="Scrivi qui il tuo messaggio..."></textarea>
-        <button onclick="sendMessage()">Invia</button>
-        <h2>Messaggi Recenti</h2>
-        <ul id="messagesList"></ul>
-    </div>
+    <textarea id="message" placeholder="Scrivi qui il tuo messaggio..."></textarea>
+    <button onclick="sendMessage()">Invia</button>
 
     <script>
-        const API_URL = 'https://json.extendsclass.com/bin/1a40bf5b2027';
-
         async function sendMessage() {
             const message = document.getElementById('message').value;
 
@@ -98,25 +60,25 @@
             }
 
             try {
-                // Recupera i messaggi esistenti
-                const existingMessages = await fetch(API_URL)
-                    .then(res => res.json())
-                    .catch(() => []);
-
-                // Aggiungi il nuovo messaggio
-                existingMessages.push({ message, date: new Date().toLocaleString() });
-
-                // Salva tutti i messaggi nel bin
-                const response = await fetch(API_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(existingMessages)
-                });
+                const response = await fetch(
+                    'https://api.github.com/repos/tuo-username/tuo-repository/actions/workflows/add-comment.yml/dispatches',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer GITHUB_TOKEN_DA_ACTIONS`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            ref: 'main',
+                            inputs: { message }
+                        })
+                    }
+                );
 
                 if (response.ok) {
                     alert('Messaggio inviato!');
                     document.getElementById('message').value = '';
-                    fetchMessages(); // Aggiorna i messaggi
                 } else {
                     alert('Errore durante l\'invio del messaggio.');
                 }
@@ -125,26 +87,6 @@
                 alert('Si è verificato un errore.');
             }
         }
-
-        async function fetchMessages() {
-            try {
-                const response = await fetch(API_URL);
-                const messages = await response.json();
-
-                const messagesList = document.getElementById('messagesList');
-                messagesList.innerHTML = '';
-
-                messages.forEach(msg => {
-                    const li = document.createElement('li');
-                    li.textContent = `${msg.message} (Inviato il ${msg.date})`;
-                    messagesList.appendChild(li);
-                });
-            } catch (error) {
-                console.error('Errore nel recupero dei messaggi:', error);
-            }
-        }
-
-        window.onload = fetchMessages;
     </script>
 </body>
 </html>
