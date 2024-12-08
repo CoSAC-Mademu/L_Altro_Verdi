@@ -129,7 +129,7 @@
     </div>
 
     <script>
-        const REPO_URL = 'https://api.github.com/repos/CoSAC-Mademu/L_Altro_Verdi';
+        const REPO_URL = 'https://api.github.com/repos/CoSAC-Mademu/L_Altro_Verdi/contents';
 
         async function sendMessage() {
             const message = document.getElementById('message').value;
@@ -139,12 +139,6 @@
             if (!message.trim() && !file) {
                 alert('Dai, scrivi un messaggio o carica un meme! (se ti va)');
                 return;
-            }
-
-            const formData = new FormData();
-            formData.append('message', message);
-            if (file) {
-                formData.append('file', file);
             }
 
             try {
@@ -182,26 +176,36 @@
 
         async function fetchSlideshowData() {
             try {
+                // Recupera i commenti
                 const commentsResponse = await fetch(`${REPO_URL}/comments.json`);
+                if (!commentsResponse.ok) {
+                    throw new Error('Impossibile caricare i commenti');
+                }
                 const commentsData = await commentsResponse.json();
-                const comments = JSON.parse(atob(commentsData.content));
+                const comments = JSON.parse(atob(commentsData.content)); // Decodifica Base64
 
+                // Recupera le immagini
                 const imagesResponse = await fetch(`${REPO_URL}/images`);
-                const imagesData = await imagesResponse.json();
+                if (!imagesResponse.ok) {
+                    throw new Error('Impossibile caricare le immagini');
+                }
+                const imagesData = await imagesResponse.json(); // Nessuna decodifica necessaria
 
                 const slideshowContent = document.getElementById('slideshow-content');
                 slideshowContent.innerHTML = '';
 
+                // Aggiungi i commenti allo slideshow
                 comments.forEach(comment => {
                     const textDiv = document.createElement('div');
                     textDiv.textContent = comment.message;
                     slideshowContent.appendChild(textDiv);
                 });
 
+                // Aggiungi le immagini allo slideshow
                 imagesData.forEach(image => {
                     const imgDiv = document.createElement('div');
                     const img = document.createElement('img');
-                    img.src = image.download_url;
+                    img.src = image.download_url; // URL diretto all'immagine
                     imgDiv.appendChild(img);
                     slideshowContent.appendChild(imgDiv);
                 });
