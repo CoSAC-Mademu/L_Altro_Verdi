@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       filename:
-        description: "Nome del file immagine"
+        description: "Nome del file immagine (opzionale)"
         required: false
         type: string
 
@@ -17,33 +17,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout della repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Aggiungi Commento e/o Meme
-        env:
-          GITHUB_TOKEN: ${{ secrets.TKN_LAV }}
+      # Inizializza il file comments.json se non esiste
+      - name: Inizializza comments.json
         run: |
-          echo "Recupero i commenti esistenti..."
           if [ ! -f comments.json ]; then
             echo "[]" > comments.json
           fi
 
-          if [ -n "${{ github.event.inputs.message }}" ]; then
-            jq --arg message "${{ github.event.inputs.message }}" \
-               --arg date "$(date)" \
-               '. + [{message: $message, date: $date}]' comments.json > updated_comments.json
-            mv updated_comments.json comments.json
-          fi
+      # Aggiungi il commento al file JSON
+      - name: Aggiungi Commento
+        if: ${{ inputs.message }}
+        env:
+          MESSAGE: ${{ inputs.message }}
+        run: |
+          echo "Aggiungo il commento: $MESSAGE"
+          jq --arg message "$MESSAGE" \
+             --arg date "$(date)" \
+             '. + [{message: $message, date: $date}]' comments.json > updated_comments.json
+          mv updated_comments.json comments.json
 
-          if [ -n "${{ github.event.inputs.filename }}" ]; then
-            if [ ! -d images ]; then
-              mkdir images
-            fi
-            echo "Aggiungo immagine..."
-            mv "${{ github.event.inputs.filename }}" "./images/${{ github.event.inputs.filename }}"
-          fi
+      # Gestisci l'immagine se fornita
+      - name: Aggiungi Meme (Immagine)
+        if: ${{ inputs.filename }}
+        run: |
+          echo "Creazione della cartella immagini se non esiste..."
+          mkdir -p images
+          echo "Caricamento del file immagine non supportato direttamente via GitHub Actions."
 
+      # Commit e Push delle Modifiche
+      - name: Commit e Push
+        env:
+          GITHUB_TOKEN: ${{ secrets.TKN_LAV }}
+        run: |
+          echo "Commit delle modifiche..."
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add comments.json
