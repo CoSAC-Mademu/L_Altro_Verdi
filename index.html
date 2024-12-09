@@ -81,17 +81,6 @@
             position: relative;
         }
 
-        .slideshow-content {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            animation: slide 10s linear infinite;
-        }
-
         .slideshow-content div {
             text-align: center;
             padding: 10px;
@@ -105,11 +94,6 @@
             display: block;
             border: 2px solid #f39c12;
             border-radius: 5px;
-        }
-
-        @keyframes slide {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-100%); }
         }
     </style>
 </head>
@@ -129,52 +113,104 @@
     </div>
 
     <script>
-const BACKEND_URL = "https://backlaltroverdi.glitch.me"; // URL del tuo backend pubblico
+        const BACKEND_URL = "https://backlaltroverdi.glitch.me";
 
-async function sendMessage() {
-    const message = document.getElementById('message').value;
-    const fileInput = document.getElementById('file');
-    const file = fileInput.files[0];
-    let fileContent = null;
+        async function sendMessage() {
+            const message = document.getElementById('message').value;
+            const fileInput = document.getElementById('file');
+            const file = fileInput.files[0];
+            let fileContent = null;
 
-    if (file) {
-        if (!file.type.startsWith('image/')) {
-            alert('Puoi caricare solo immagini!');
-            return;
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('Puoi caricare solo immagini!');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    fileContent = e.target.result.split(",")[1];
+                };
+                reader.readAsDataURL(file);
+                await new Promise(resolve => { reader.onloadend = resolve; });
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/upload`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message || '',
+                        filename: file ? file.name : null,
+                        file_content: fileContent || null
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Messaggio inviato con successo!');
+                    document.getElementById('message').value = '';
+                    fileInput.value = '';
+                    loadSlideshow(); // Aggiorna lo slideshow
+                } else {
+                    const result = await response.json();
+                    alert(`Errore durante l'invio: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Errore:', error);
+                alert('Si è verificato un errore durante l\'invio.');
+            }
         }
 
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            fileContent = e.target.result.split(",")[1]; // Elimina la parte "data:image/png;base64,"
-        };
-        reader.readAsDataURL(file);
-        await new Promise(resolve => { reader.onloadend = resolve; }); // CORRETTO: aggiunto oggetto {}
-    }
+        async function loadSlideshow() {
+            const slideshowContent = document.getElementById('slideshow-content');
 
-    try {
-        const response = await fetch(`${BACKEND_URL}/upload`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: message || '',
-                filename: file ? file.name : null,
-                file_content: fileContent || null
-            })
+            try {
+                const response = await fetch(`${BACKEND_URL}/data`);
+                if (!response.ok) throw new Error('Errore nel recupero dei dati');
+
+                const data = await response.json();
+                const { comments, images } = data;
+
+                slideshowContent.innerHTML = '';
+
+                comments.forEach(comment => {
+                    const div = document.createElement('div');
+                    div.textContent = comment.message;
+                    slideshowContent.appendChild(div);
+                });
+
+                images.forEach(imgUrl => {
+                    const div = document.createElement('div');
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    div.appendChild(img);
+                    slideshowContent.appendChild(div);
+                });
+
+                startSlideshow();
+            } catch (error) {
+                console.error('Errore:', error);
+                alert('Impossibile caricare i dati dello slideshow.');
+            }
+        }
+
+        let currentIndex = 0;
+
+        function startSlideshow() {
+            const slides = document.querySelectorAll('#slideshow-content > div');
+            if (slides.length === 0) return;
+
+            slides.forEach((slide, index) => {
+                slide.style.display = index === currentIndex ? 'block' : 'none';
+            });
+
+            currentIndex = (currentIndex + 1) % slides.length;
+            setTimeout(startSlideshow, 5000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSlideshow();
         });
-
-        if (response.ok) {
-            alert('Messaggio inviato con successo!');
-            document.getElementById('message').value = '';
-            fileInput.value = '';
-        } else {
-            const result = await response.json();
-            alert(`Errore durante l'invio: ${result.error}`);
-        }
-    } catch (error) {
-        console.error('Errore:', error);
-        alert('Si è verificato un errore durante l\'invio.');
-    }
-}
     </script>
 </body>
 </html>
