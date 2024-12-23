@@ -44,7 +44,7 @@
         }
 
         textarea {
-            height: 80px; /* Ridimensionato */
+            height: 80px;
             background-color: #333;
             border: 1px solid #f39c12;
             color: #fff;
@@ -150,25 +150,23 @@
             const message = document.getElementById('message').value;
             const fileInput = document.getElementById('file');
             const file = fileInput.files[0];
+
+            if (!message && !file) {
+                alert("Devi fornire un messaggio o un file!");
+                return;
+            }
+
             let fileContent = null;
-
             if (file) {
-                if (!file.type.startsWith('image/') && !file.type.startsWith('audio/')) {
-                    alert('Puoi caricare solo immagini o audio!');
-                    return;
-                }
-
                 const reader = new FileReader();
-                reader.onload = function (e) {
-                    fileContent = e.target.result.split(",")[1];
-                };
                 reader.readAsDataURL(file);
                 await new Promise(resolve => { reader.onloadend = resolve; });
+                fileContent = reader.result.split(",")[1];
             }
 
             try {
                 const payload = {
-                    message: message || '',
+                    message: message.trim(),
                     filename: file ? file.name : null,
                     file_content: fileContent || null
                 };
@@ -192,58 +190,43 @@
                     alert(`Errore durante l'invio: ${result.error}`);
                 }
             } catch (error) {
-                console.error('Errore durante l'invio:', error);
-                alert('Si è verificato un errore durante l'invio.');
+                console.error('Errore durante l\'invio:', error);
+                alert('Si è verificato un errore durante l\'invio.');
             }
         }
 
         async function loadCreativeMode() {
             const creativeContent = document.getElementById('creative-content');
-            const existingItems = new Set();
-
-            Array.from(creativeContent.children).forEach(child => {
-                existingItems.add(child.dataset.uniqueId);
-            });
+            creativeContent.innerHTML = ''; // Reset del contenuto
 
             try {
                 const response = await fetch(`${BACKEND_URL}/data`);
                 if (!response.ok) throw new Error('Errore nel recupero dei dati');
 
                 const data = await response.json();
-                console.log("Dati caricati:", data);
+                console.log("Dati caricati per modalità creativa:", data);
 
                 data.forEach(item => {
-                    const uniqueId = item.type + (item.message || item.url);
-
-                    if (!existingItems.has(uniqueId)) {
-                        let element;
-                        if (item.type === 'comment') {
-                            element = document.createElement('div');
-                            element.textContent = item.message;
-                        } else if (item.type === 'image') {
-                            element = document.createElement('img');
-                            element.src = item.url;
-                        } else if (item.type === 'audio') {
-                            element = document.createElement('audio');
-                            element.src = item.url;
-                            element.autoplay = true;
-                            element.loop = true;
-                        }
-
-                        if (element) {
-                            element.style.left = `${Math.random() * 90}%`;
-                            element.style.top = `${Math.random() * 90}%`;
-                            element.style.position = 'absolute';
-                            element.dataset.uniqueId = uniqueId;
-                            creativeContent.appendChild(element);
-                        }
+                    let element;
+                    if (item.type === 'comment') {
+                        element = document.createElement('div');
+                        element.textContent = item.message;
+                    } else if (item.type === 'image') {
+                        element = document.createElement('img');
+                        element.src = item.url;
+                    } else if (item.type === 'audio') {
+                        element = document.createElement('audio');
+                        element.src = item.url;
+                        element.autoplay = true;
+                        element.loop = true;
                     }
-                });
 
-                // Aggiorna continuamente le posizioni degli elementi esistenti
-                Array.from(creativeContent.children).forEach(child => {
-                    child.style.left = `${Math.random() * 90}%`;
-                    child.style.top = `${Math.random() * 90}%`;
+                    if (element) {
+                        element.style.left = `${Math.random() * 90}%`;
+                        element.style.top = `${Math.random() * 90}%`;
+                        element.dataset.uniqueId = `${item.type}-${item.url || item.message}`;
+                        creativeContent.appendChild(element);
+                    }
                 });
             } catch (error) {
                 console.error('Errore durante il caricamento della modalità creativa:', error);
@@ -258,4 +241,3 @@
     </script>
 </body>
 </html>
-
