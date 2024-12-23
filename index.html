@@ -83,47 +83,24 @@
             margin: 0 auto;
         }
 
-        .creative-content div, .creative-content img, .creative-content audio {
+        .creative-content img {
+            max-width: 150px;
+            max-height: 150px;
             position: absolute;
-            animation: move 10s infinite linear;
-            transition: transform 2s ease;
+            border-radius: 5px;
         }
 
-        @keyframes move {
-            0% {
-                transform: translate(0, 0);
-            }
-            25% {
-                transform: translate(50px, -50px);
-            }
-            50% {
-                transform: translate(-50px, 50px);
-            }
-            75% {
-                transform: translate(100px, -100px);
-            }
-            100% {
-                transform: translate(0, 0);
-            }
+        .creative-content audio {
+            width: 150px;
+            position: absolute;
         }
 
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 2rem;
-            }
-
-            h2 {
-                font-size: 1.2rem;
-            }
-
-            .container {
-                width: 100%;
-                padding: 10px;
-            }
-
-            .creative-mode {
-                height: 200px;
-            }
+        .creative-content div {
+            position: absolute;
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -222,16 +199,52 @@
                     }
 
                     if (element) {
-                        element.style.left = `${Math.random() * 90}%`;
-                        element.style.top = `${Math.random() * 90}%`;
-                        element.dataset.uniqueId = `${item.type}-${item.url || item.message}`;
+                        element.classList.add('moving-element');
                         creativeContent.appendChild(element);
                     }
                 });
+
+                startBouncingElements(); // Attiva il movimento
             } catch (error) {
                 console.error('Errore durante il caricamento della modalità creativa:', error);
                 alert('Impossibile caricare i dati della modalità creativa.');
             }
+        }
+
+        function startBouncingElements() {
+            const container = document.querySelector('.creative-mode');
+            const elements = document.querySelectorAll('.moving-element');
+
+            elements.forEach(element => {
+                const rect = container.getBoundingClientRect();
+
+                // Imposta posizione iniziale casuale
+                element.style.left = `${Math.random() * (rect.width - 150)}px`;
+                element.style.top = `${Math.random() * (rect.height - 150)}px`;
+
+                // Velocità casuale per ogni direzione
+                const velocity = {
+                    x: (Math.random() - 0.5) * 5, // Random tra -2.5 e 2.5
+                    y: (Math.random() - 0.5) * 5
+                };
+
+                // Movimento continuo
+                setInterval(() => {
+                    let x = parseFloat(element.style.left || 0);
+                    let y = parseFloat(element.style.top || 0);
+
+                    // Aggiorna posizione
+                    x += velocity.x;
+                    y += velocity.y;
+
+                    // Controlla collisione con i bordi
+                    if (x <= 0 || x >= rect.width - 150) velocity.x *= -1; // Inverti direzione orizzontale
+                    if (y <= 0 || y >= rect.height - 150) velocity.y *= -1; // Inverti direzione verticale
+
+                    element.style.left = `${Math.min(Math.max(0, x), rect.width - 150)}px`;
+                    element.style.top = `${Math.min(Math.max(0, y), rect.height - 150)}px`;
+                }, 50); // Aggiorna ogni 50ms
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
