@@ -44,7 +44,7 @@
         }
 
         textarea {
-            height: 100px;
+            height: 80px; /* Ridimensionato per proporzione */
             background-color: #333;
             border: 1px solid #f39c12;
             color: #fff;
@@ -165,15 +165,21 @@
             }
 
             try {
+                const payload = {
+                    message: message || '',
+                    filename: file ? file.name : null,
+                    file_content: fileContent || null
+                };
+                console.log("Payload inviato:", payload);
+
                 const response = await fetch(`${BACKEND_URL}/upload`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: message || '',
-                        filename: file ? file.name : null,
-                        file_content: fileContent || null
-                    })
+                    body: JSON.stringify(payload)
                 });
+
+                const result = await response.json();
+                console.log("Risposta dal server:", result);
 
                 if (response.ok) {
                     alert('Messaggio inviato con successo!');
@@ -181,11 +187,10 @@
                     fileInput.value = '';
                     loadCreativeMode(); // Aggiorna la modalità creativa
                 } else {
-                    const result = await response.json();
                     alert(`Errore durante l'invio: ${result.error}`);
                 }
             } catch (error) {
-                console.error('Errore:', error);
+                console.error('Errore durante l'invio:', error);
                 alert('Si è verificato un errore durante l'invio.');
             }
         }
@@ -203,6 +208,8 @@
                 if (!response.ok) throw new Error('Errore nel recupero dei dati');
 
                 const data = await response.json();
+                console.log("Dati caricati:", data);
+
                 data.forEach(item => {
                     const uniqueId = item.type + (item.message || item.url);
 
@@ -237,7 +244,7 @@
                     child.style.top = `${Math.random() * 90}%`;
                 });
             } catch (error) {
-                console.error('Errore:', error);
+                console.error('Errore durante il caricamento della modalità creativa:', error);
                 alert('Impossibile caricare i dati della modalità creativa.');
             }
         }
