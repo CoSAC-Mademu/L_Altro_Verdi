@@ -71,44 +71,60 @@
             background-color: #e67e22;
         }
 
-        .slideshow {
+        .creative-mode {
             margin-top: 20px;
             overflow: hidden;
-            height: 250px;
+            height: 300px;
             background-color: #111;
             border: 1px solid #f39c12;
             border-radius: 5px;
             position: relative;
         }
 
-        .slideshow-content div {
-            text-align: center;
-            padding: 10px;
+        .creative-content div {
+            position: absolute;
             color: #fff;
+            font-size: 1.2rem;
+            animation: float 10s infinite;
         }
 
-        .slideshow-content img {
-            max-width: 100%;
-            max-height: 200px;
-            margin: 0 auto;
-            display: block;
-            border: 2px solid #f39c12;
+        .creative-content img {
+            position: absolute;
+            max-width: 100px;
+            max-height: 100px;
             border-radius: 5px;
+            animation: float 10s infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-20px) rotate(10deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
         }
     </style>
 </head>
 <body>
     <h1>L'Altro Verdi</h1>
     <h2>Mbe allor, cia n pinz?</h2>
+
     <div class="container">
         <textarea id="message" placeholder="Scrivi qui il tuo messaggio..."></textarea>
         <input type="file" id="file" accept="image/png, image/jpeg">
         <button onclick="sendMessage()">Invia</button>
     </div>
 
-    <div class="slideshow">
-        <div id="slideshow-content" class="slideshow-content">
-            <!-- I messaggi e i meme verranno caricati dinamicamente qui -->
+    <div class="creative-mode">
+        <div id="creative-content" class="creative-content">
+            <!-- I contenuti verranno animati dinamicamente qui -->
         </div>
     </div>
 
@@ -150,7 +166,7 @@
                     alert('Messaggio inviato con successo!');
                     document.getElementById('message').value = '';
                     fileInput.value = '';
-                    loadSlideshow(); // Aggiorna lo slideshow
+                    loadCreativeMode(); // Aggiorna la modalità creativa
                 } else {
                     const result = await response.json();
                     alert(`Errore durante l'invio: ${result.error}`);
@@ -161,8 +177,8 @@
             }
         }
 
-        async function loadSlideshow() {
-            const slideshowContent = document.getElementById('slideshow-content');
+        async function loadCreativeMode() {
+            const creativeContent = document.getElementById('creative-content');
 
             try {
                 const response = await fetch(`${BACKEND_URL}/data`);
@@ -171,45 +187,31 @@
                 const data = await response.json();
                 const { comments, images } = data;
 
-                slideshowContent.innerHTML = '';
+                creativeContent.innerHTML = '';
 
                 comments.forEach(comment => {
                     const div = document.createElement('div');
                     div.textContent = comment.message;
-                    slideshowContent.appendChild(div);
+                    div.style.left = `${Math.random() * 90}%`;
+                    div.style.top = `${Math.random() * 90}%`;
+                    creativeContent.appendChild(div);
                 });
 
                 images.forEach(imgUrl => {
-                    const div = document.createElement('div');
                     const img = document.createElement('img');
                     img.src = imgUrl;
-                    div.appendChild(img);
-                    slideshowContent.appendChild(div);
+                    img.style.left = `${Math.random() * 90}%`;
+                    img.style.top = `${Math.random() * 90}%`;
+                    creativeContent.appendChild(img);
                 });
-
-                startSlideshow();
             } catch (error) {
                 console.error('Errore:', error);
-                alert('Impossibile caricare i dati dello slideshow.');
+                alert('Impossibile caricare i dati della modalità creativa.');
             }
         }
 
-        let currentIndex = 0;
-
-        function startSlideshow() {
-            const slides = document.querySelectorAll('#slideshow-content > div');
-            if (slides.length === 0) return;
-
-            slides.forEach((slide, index) => {
-                slide.style.display = index === currentIndex ? 'block' : 'none';
-            });
-
-            currentIndex = (currentIndex + 1) % slides.length;
-            setTimeout(startSlideshow, 5000);
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            loadSlideshow();
+            loadCreativeMode();
         });
     </script>
 </body>
