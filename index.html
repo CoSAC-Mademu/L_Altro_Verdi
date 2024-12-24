@@ -298,7 +298,7 @@
                 const distance = targetTime - now;
 
                 if (distance < 0) {
-                    countdownElement.textContent = "Tempo scaduto!";
+                    countdownElement.textContent = "00:00:00:00";
                     clearInterval(interval);
                     return;
                 }
@@ -308,7 +308,7 @@
                 const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-                countdownElement.textContent = `${days} giorni, ${hours} ore, ${minutes} minuti, ${seconds} secondi`;
+                countdownElement.textContent = `${days}:${hours}:${minutes}:${seconds}`;
             }
 
             updateCountdown(); // Aggiorna subito la visualizzazione
@@ -324,3 +324,4 @@
     </script>
 </body>
 </html>
+
