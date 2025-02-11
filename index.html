@@ -10,37 +10,13 @@
             background-color: #000;
             color: #fff;
             font-family: 'Oswald', sans-serif;
-            margin: 0;
-            padding: 0;
             text-align: center;
         }
 
         h1 {
             font-family: 'Anton', sans-serif;
             color: #f39c12;
-            margin: 20px 0;
             font-size: 3rem;
-        }
-
-        .subheading-small {
-            margin: 0;
-            font-size: 1rem;
-            color: #fff;
-            font-style: italic;
-            font-family: 'Oswald', sans-serif;
-        }
-
-        .episode-title {
-            font-family: 'Oswald', sans-serif;
-            font-size: 2rem;
-            color: #fff;
-            margin: 10px 0;
-        }
-
-        h2 {
-            color: #fff;
-            font-size: 1.8rem;
-            margin: 10px 0 20px;
         }
 
         .container {
@@ -79,98 +55,25 @@
             font-size: 1rem;
             cursor: pointer;
             border-radius: 5px;
-            font-family: 'Oswald', sans-serif;
-        }
-
-        button:hover {
-            background-color: #e67e22;
-        }
-
-        .creative-mode {
-            margin-top: 20px;
-            overflow: hidden;
-            height: 300px;
-            max-width: 800px;
-            background-color: #111;
-            border: 1px solid #f39c12;
-            border-radius: 5px;
-            position: relative;
-            margin: 0 auto;
-        }
-
-        .creative-content img {
-            max-width: 150px;
-            max-height: 150px;
-            position: absolute;
-            border-radius: 5px;
-        }
-
-        .creative-content audio {
-            width: 150px;
-            position: absolute;
-        }
-
-        .creative-content div {
-            position: absolute;
-            color: #fff;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-
-        .countdown {
-            font-family: 'Oswald', sans-serif;
-            font-size: 1.5rem;
-            color: #f39c12;
-            text-align: center;
-            padding: 15px;
-            border: 2px solid #f39c12;
-            border-radius: 10px;
-            background-color: #111;
-            width: 90%;
-            max-width: 600px;
-            margin: 30px auto;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-        }
-
-        .countdown span {
-            font-weight: bold;
-            color: #fff;
         }
     </style>
 </head>
 <body>
-    <h1>
-        L'Altro Verdi
-    </h1>
-    <h2 class="subheading-small">La nostra bacheca è una Zona Digitale Temporaneamente Autonoma (TADZ)!</h2>
-    <h3 class="episode-title">Ep. 3: The Substance</h3>
-
+    <h1>L'Altro Verdi</h1>
     <div class="container">
         <textarea id="message" placeholder="Scrivi qui il tuo messaggio..."></textarea>
         <input type="file" id="file" accept="image/png, image/jpeg, audio/ogg, audio/mp3, audio/wav">
         <button onclick="sendMessage()">Invia</button>
     </div>
 
-    <div class="creative-mode">
-        <div id="creative-content" class="creative-content">
-            <!-- I contenuti verranno animati dinamicamente qui -->
-        </div>
-    </div>
-
-    <div id="countdown" class="countdown">
-         <span id="countdown-timer">...</span> 
-    </div>
-
     <script>
-        const BACKEND_URL = "https://backlaltroverdi.glitch.me";  // Modifica questo URL per il backend corretto
+        const BACKEND_URL = window.location.origin; 
 
         async function sendMessage() {
             const message = document.getElementById('message').value;
             const fileInput = document.getElementById('file');
             const file = fileInput.files[0];
 
-            // Verifica se almeno un campo è compilato
             if (!message && !file) {
                 alert("Devi fornire un messaggio o un file!");
                 return;
@@ -181,17 +84,14 @@
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
                 await new Promise(resolve => { reader.onloadend = resolve; });
-                fileContent = reader.result.split(",")[1];  // Otteniamo la parte base64 del file
+                fileContent = reader.result.split(",")[1];  
             }
 
-            // Creiamo il payload da inviare al backend
             const payload = {
-                message: message.trim(),  // Rimuoviamo gli spazi extra
-                filename: file ? file.name : null,  // Se c'è un file, aggiungiamo il nome
-                file_content: fileContent || null  // Se c'è un file, aggiungiamo il contenuto base64
+                message: message.trim(),
+                filename: file ? file.name : null,
+                file_content: fileContent || null
             };
-
-            console.log("Payload inviato:", payload);
 
             try {
                 const response = await fetch(`${BACKEND_URL}/upload`, {
@@ -201,128 +101,11 @@
                 });
 
                 const result = await response.json();
-                console.log("Risposta dal server:", result);
-
-                if (response.ok) {
-                    alert('Messaggio inviato con successo!');
-                    document.getElementById('message').value = '';  // Reset del campo messaggio
-                    fileInput.value = '';  // Reset del campo file
-                    loadCreativeMode(); // Ricarica la modalità creativa
-                } else {
-                    alert(`Errore durante l'invio: ${result.error}`);
-                }
+                alert(response.ok ? 'Messaggio inviato!' : `Errore: ${result.error}`);
             } catch (error) {
-                console.error('Errore durante l\'invio:', error);
-                alert('Si è verificato un errore durante l\'invio.');
+                alert('Errore durante l\'invio.');
             }
         }
-
-        async function loadCreativeMode() {
-            const creativeContent = document.getElementById('creative-content');
-            creativeContent.innerHTML = '';  // Reset del contenuto
-
-            try {
-                const response = await fetch(`${BACKEND_URL}/data`);
-                if (!response.ok) throw new Error('Errore nel recupero dei dati');
-
-                const data = await response.json();
-                console.log("Dati caricati per modalità creativa:", data);
-
-                data.forEach(item => {
-                    let element;
-                    if (item.type === 'comment') {
-                        element = document.createElement('div');
-                        element.textContent = item.message;
-                    } else if (item.type === 'image') {
-                        element = document.createElement('img');
-                        element.src = item.url;
-                    } else if (item.type === 'audio') {
-                        element = document.createElement('audio');
-                        element.src = item.url;
-                        element.autoplay = true;
-                        element.loop = true;
-                    }
-
-                    if (element) {
-                        element.classList.add('moving-element');
-                        creativeContent.appendChild(element);
-                    }
-                });
-
-                startBouncingElements(); // Attiva il movimento
-            } catch (error) {
-                console.error('Errore durante il caricamento della modalità creativa:', error);
-                alert('Impossibile caricare i dati della modalità creativa.');
-            }
-        }
-
-        function startBouncingElements() {
-            const container = document.querySelector('.creative-mode');
-            const elements = document.querySelectorAll('.moving-element');
-
-            elements.forEach(element => {
-                const rect = container.getBoundingClientRect();
-
-                // Imposta posizione iniziale casuale
-                element.style.left = `${Math.random() * (rect.width - 150)}px`;
-                element.style.top = `${Math.random() * (rect.height - 150)}px`;
-
-                // Velocità casuale per ogni direzione
-                const velocity = {
-                    x: (Math.random() - 0.5) * 5, // Random tra -2.5 e 2.5
-                    y: (Math.random() - 0.5) * 5
-                };
-
-                // Movimento continuo
-                setInterval(() => {
-                    let x = parseFloat(element.style.left || 0);
-                    let y = parseFloat(element.style.top || 0);
-
-                    // Aggiorna posizione
-                    x += velocity.x;
-                    y += velocity.y;
-
-                    // Controlla collisione con i bordi
-                    if (x <= 0 || x >= rect.width - 150) velocity.x *= -1; // Inverti direzione orizzontale
-                    if (y <= 0 || y >= rect.height - 150) velocity.y *= -1; // Inverti direzione verticale
-
-                    element.style.left = `${Math.min(Math.max(0, x), rect.width - 150)}px`;
-                    element.style.top = `${Math.min(Math.max(0, y), rect.height - 150)}px`;
-                }, 50); // Aggiorna ogni 50ms
-            });
-        }
-
-        function startCountdown(targetDate) {
-            const countdownElement = document.getElementById('countdown-timer');
-            const targetTime = new Date(targetDate).getTime();
-
-            function updateCountdown() {
-                const now = new Date().getTime();
-                const distance = targetTime - now;
-
-                if (distance < 0) {
-                    countdownElement.textContent = "00:00:00:00";
-                    clearInterval(interval);
-                    return;
-                }
-
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                countdownElement.textContent = `${days}:${hours}:${minutes}:${seconds}`;
-            }
-
-            updateCountdown(); // Aggiorna subito la visualizzazione
-            const interval = setInterval(updateCountdown, 1000); // Aggiorna ogni secondo
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCreativeMode();
-            setInterval(loadCreativeMode, 10000); // Aggiorna ogni 10 secondi
-            startCountdown('2025-02-17T21:30:00'); // Data e ora della prossima proiezione
-        });
     </script>
 </body>
 </html>
