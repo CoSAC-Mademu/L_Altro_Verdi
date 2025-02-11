@@ -56,6 +56,37 @@
             cursor: pointer;
             border-radius: 5px;
         }
+
+        .creative-mode {
+            margin-top: 20px;
+            overflow: hidden;
+            height: 300px;
+            max-width: 800px;
+            background-color: #111;
+            border: 1px solid #f39c12;
+            border-radius: 5px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .creative-content img, .creative-content audio {
+            max-width: 150px;
+            max-height: 150px;
+            position: absolute;
+            border-radius: 5px;
+        }
+
+        .creative-content audio {
+            width: 150px;
+        }
+
+        .creative-content div {
+            position: absolute;
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -66,10 +97,19 @@
         <button onclick="sendMessage()">Invia</button>
     </div>
 
+    <div class="creative-mode">
+        <div id="creative-content" class="creative-content">
+            <!-- Qui vengono caricati i contenuti -->
+        </div>
+    </div>
+
     <script>
         const BACKEND_URL = "https://backlaltroverdi.glitch.me"; 
 
         async function sendMessage() {
+            console.log("[LOG] Invio richiesta al backend...");
+            console.log("Backend URL:", BACKEND_URL);
+
             const message = document.getElementById('message').value;
             const fileInput = document.getElementById('file');
             const file = fileInput.files[0];
@@ -87,10 +127,10 @@
                 fileContent = reader.result.split(",")[1];  
             }
 
-            const payload = {
-                message: message.trim(),
-                filename: file ? file.name : null,
-                file_content: fileContent || null
+            const payload = { 
+                message: message.trim(), 
+                filename: file ? file.name : null, 
+                file_content: fileContent || null 
             };
 
             try {
@@ -101,11 +141,90 @@
                 });
 
                 const result = await response.json();
+                console.log("[LOG] Risposta dal backend:", result);
                 alert(response.ok ? 'Messaggio inviato!' : `Errore: ${result.error}`);
+                
+                loadCreativeMode();
             } catch (error) {
-                alert('Errore durante l\'invio.');
+                console.error("Errore durante l'invio:", error);
             }
         }
+
+        async function loadCreativeMode() {
+            const creativeContent = document.getElementById('creative-content');
+            creativeContent.innerHTML = '';  // Reset del contenuto
+
+            try {
+                console.log("[LOG] Caricamento contenuti dalla modalità creativa...");
+                const response = await fetch(`${BACKEND_URL}/data`);
+                if (!response.ok) throw new Error('Errore nel recupero dei dati');
+
+                const data = await response.json();
+                console.log("[LOG] Dati ricevuti:", data);
+
+                data.forEach(item => {
+                    let element;
+                    if (item.type === 'comment') {
+                        element = document.createElement('div');
+                        element.textContent = item.message;
+                    } else if (item.type === 'image') {
+                        element = document.createElement('img');
+                        element.src = item.url;
+                    } else if (item.type === 'audio') {
+                        element = document.createElement('audio');
+                        element.src = item.url;
+                        element.autoplay = true;
+                        element.loop = true;
+                    }
+
+                    if (element) {
+                        element.classList.add('moving-element');
+                        creativeContent.appendChild(element);
+                    }
+                });
+
+                startBouncingElements();
+            } catch (error) {
+                console.error("Errore durante il caricamento della modalità creativa:", error);
+                alert('Impossibile caricare i dati della modalità creativa.');
+            }
+        }
+
+        function startBouncingElements() {
+            const container = document.querySelector('.creative-mode');
+            const elements = document.querySelectorAll('.moving-element');
+
+            elements.forEach(element => {
+                const rect = container.getBoundingClientRect();
+
+                element.style.left = `${Math.random() * (rect.width - 150)}px`;
+                element.style.top = `${Math.random() * (rect.height - 150)}px`;
+
+                const velocity = {
+                    x: (Math.random() - 0.5) * 5,
+                    y: (Math.random() - 0.5) * 5
+                };
+
+                setInterval(() => {
+                    let x = parseFloat(element.style.left || 0);
+                    let y = parseFloat(element.style.top || 0);
+
+                    x += velocity.x;
+                    y += velocity.y;
+
+                    if (x <= 0 || x >= rect.width - 150) velocity.x *= -1;
+                    if (y <= 0 || y >= rect.height - 150) velocity.y *= -1;
+
+                    element.style.left = `${Math.min(Math.max(0, x), rect.width - 150)}px`;
+                    element.style.top = `${Math.min(Math.max(0, y), rect.height - 150)}px`;
+                }, 50);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCreativeMode();
+            setInterval(loadCreativeMode, 10000);
+        });
     </script>
 </body>
 </html>
