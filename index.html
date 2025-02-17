@@ -265,30 +265,41 @@
             const container = document.querySelector('.creative-mode');
             const elements = document.querySelectorAll('.moving-element');
 
-            function animate() {
-                elements.forEach(element => {
-                    const rect = container.getBoundingClientRect();
-                    let x = parseFloat(element.style.left || 0);
-                    let y = parseFloat(element.style.top || 0);
-                    const velocity = {
-                        x: (Math.random() - 0.5) * 5,
-                        y: (Math.random() - 0.5) * 5
-                    };
+            elements.forEach(element => {
+                const rect = container.getBoundingClientRect();
 
+                // Imposta una posizione iniziale casuale
+                element.style.left = `${Math.random() * (rect.width - 150)}px`;
+                element.style.top = `${Math.random() * (rect.height - 150)}px`;
+
+                // Imposta una velocità iniziale casuale
+                const velocity = {
+                    x: (Math.random() - 0.5) * 2, // Velocità più lenta
+                    y: (Math.random() - 0.5) * 2
+                };
+
+                // Avvia l'animazione con setInterval
+                setInterval(() => {
+                    let x = parseFloat(element.style.left);
+                    let y = parseFloat(element.style.top);
+
+                    // Aggiorna le posizioni
                     x += velocity.x;
                     y += velocity.y;
 
-                    if (x <= 0 || x >= rect.width - 150) velocity.x *= -1;
-                    if (y <= 0 || y >= rect.height - 150) velocity.y *= -1;
+                    // Controlla i bordi e inverti la direzione se necessario
+                    if (x <= 0 || x + element.offsetWidth >= rect.width) {
+                        velocity.x *= -1;
+                    }
+                    if (y <= 0 || y + element.offsetHeight >= rect.height) {
+                        velocity.y *= -1;
+                    }
 
-                    element.style.left = `${Math.min(Math.max(0, x), rect.width - 150)}px`;
-                    element.style.top = `${Math.min(Math.max(0, y), rect.height - 150)}px`;
-                });
-
-                requestAnimationFrame(animate);
-            }
-
-            requestAnimationFrame(animate);
+                    // Applica le nuove posizioni
+                    element.style.left = `${x}px`;
+                    element.style.top = `${y}px`;
+                }, 50); // Intervallo di 50ms (20 fps)
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
