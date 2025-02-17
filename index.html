@@ -6,6 +6,7 @@
     <title>L'Altro Verdi - Bacheca</title>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        /* Stili di base */
         body {
             background-color: #000;
             color: #fff;
@@ -46,10 +47,6 @@
             padding: 10px;
             border-radius: 5px;
             font-size: 1rem;
-        }
-
-        textarea {
-            height: 80px;
             background-color: #333;
             border: 1px solid #f39c12;
             color: #fff;
@@ -57,8 +54,6 @@
 
         input[type="file"] {
             background-color: #444;
-            border: 1px solid #f39c12;
-            color: #fff;
         }
 
         button {
@@ -101,17 +96,52 @@
             padding: 5px 10px;
             border-radius: 5px;
         }
+
+        .countdown-container {
+            margin-top: 20px;
+            text-align: center;
+            font-family: 'Oswald', sans-serif;
+            color: #fff;
+            font-size: 1.5rem;
+        }
+
+        #countdown-title {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            color: #f39c12;
+        }
+
+        #countdown {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            color: #4caf50;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1>L'Altro Verdi</h1>
     <h2 class="subheading-small">La nostra bacheca è una Zona Digitale Temporaneamente Autonoma (TADZ)!</h2>
-    <h3 class="episode-title">Ep. 3: The Substance</h3>
+    <h3 class="episode-title">Ep. 4: Anomalisa</h3>
 
     <div class="container">
         <textarea id="message" placeholder="Scrivi qui il tuo messaggio..."></textarea>
         <input type="file" id="file" accept="image/png, image/jpeg, audio/ogg, audio/mp3, audio/wav">
         <button onclick="sendMessage()">Invia</button>
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
     </div>
 
     <div class="creative-mode">
@@ -120,8 +150,13 @@
         </div>
     </div>
 
+    <div class="countdown-container">
+        <h3 id="countdown-title"> </h3>
+        <div id="countdown"></div>
+    </div>
+
     <script>
-        const BACKEND_URL = "https://backlaltroverdi.glitch.me"; 
+        const BACKEND_URL = "https://backlaltroverdi.glitch.me";
 
         async function sendMessage() {
             console.log("[LOG] Invio richiesta al backend...");
@@ -132,7 +167,7 @@
             const file = fileInput.files[0];
 
             if (!message && !file) {
-                alert("Devi fornire un messaggio o un file!");
+                showError("Devi fornire un messaggio o un file!");
                 return;
             }
 
@@ -141,13 +176,13 @@
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
                 await new Promise(resolve => { reader.onloadend = resolve; });
-                fileContent = reader.result.split(",")[1];  
+                fileContent = reader.result.split(",")[1];
             }
 
-            const payload = { 
-                message: message.trim(), 
-                filename: file ? file.name : null, 
-                file_content: fileContent || null 
+            const payload = {
+                message: message.trim(),
+                filename: file ? file.name : null,
+                file_content: fileContent || null
             };
 
             try {
@@ -159,12 +194,31 @@
 
                 const result = await response.json();
                 console.log("[LOG] Risposta dal backend:", result);
-                alert(response.ok ? 'Messaggio inviato!' : `Errore: ${result.error}`);
-                
-                loadCreativeMode();
+
+                if (response.ok) {
+                    showSuccess('Messaggio inviato!');
+                    loadCreativeMode();
+                } else {
+                    showError(`Errore: ${result.error}`);
+                }
             } catch (error) {
                 console.error("Errore durante l'invio:", error);
+                showError("ZzZz. Riprova più tardi");
             }
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            document.getElementById('success-message').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successMessage = document.getElementById('success-message');
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
         }
 
         async function loadCreativeMode() {
@@ -203,7 +257,7 @@
                 startBouncingElements();
             } catch (error) {
                 console.error("Errore durante il caricamento della modalità creativa:", error);
-                alert('Impossibile caricare i dati della modalità creativa.');
+                showError("Sto un po' sfasatx, prova a riavviare la pagina");
             }
         }
 
@@ -211,20 +265,15 @@
             const container = document.querySelector('.creative-mode');
             const elements = document.querySelectorAll('.moving-element');
 
-            elements.forEach(element => {
-                const rect = container.getBoundingClientRect();
-
-                element.style.left = `${Math.random() * (rect.width - 150)}px`;
-                element.style.top = `${Math.random() * (rect.height - 150)}px`;
-
-                const velocity = {
-                    x: (Math.random() - 0.5) * 5,
-                    y: (Math.random() - 0.5) * 5
-                };
-
-                setInterval(() => {
+            function animate() {
+                elements.forEach(element => {
+                    const rect = container.getBoundingClientRect();
                     let x = parseFloat(element.style.left || 0);
                     let y = parseFloat(element.style.top || 0);
+                    const velocity = {
+                        x: (Math.random() - 0.5) * 5,
+                        y: (Math.random() - 0.5) * 5
+                    };
 
                     x += velocity.x;
                     y += velocity.y;
@@ -234,14 +283,40 @@
 
                     element.style.left = `${Math.min(Math.max(0, x), rect.width - 150)}px`;
                     element.style.top = `${Math.min(Math.max(0, y), rect.height - 150)}px`;
-                }, 50);
-            });
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            requestAnimationFrame(animate);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             loadCreativeMode();
             setInterval(loadCreativeMode, 10000);
         });
+
+        function updateCountdown() {
+            const eventDate = new Date("2025-03-03T21:00:00").getTime();
+            const now = new Date().getTime();
+            const timeRemaining = eventDate - now;
+
+            if (timeRemaining <= 0) {
+                document.getElementById("countdown").innerHTML = "L'evento è iniziato!";
+                return;
+            }
+
+            const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+            document.getElementById("countdown").innerHTML =
+                `${days}g ${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
     </script>
 </body>
 </html>
