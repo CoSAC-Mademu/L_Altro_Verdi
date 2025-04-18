@@ -1,333 +1,149 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>L'Altro Verdi - Bacheca</title>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        /* Stili di base */
-        body {
-            background-color: #000;
-            color: #fff;
-            font-family: 'Oswald', sans-serif;
-            text-align: center;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bacheca Cosac — Epitaffio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: 'Oswald', sans-serif;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      overflow-x: hidden;
+      position: relative;
+    }
 
-        h1 {
-            font-family: 'Anton', sans-serif;
-            color: #f39c12;
-            font-size: 3rem;
-            margin-bottom: 5px;
-        }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="white"><rect x="0" y="0" width="1" height="1"/></svg>') repeat;
+      opacity: 0.015;
+      z-index: 1;
+      pointer-events: none;
+    }
 
-        .subheading-small {
-            font-size: 1rem;
-            color: #fff;
-            font-style: italic;
-            font-family: 'Oswald', sans-serif;
-        }
+    h1 {
+      font-family: 'Anton', sans-serif;
+      color: #f39c12;
+      font-size: 3rem;
+      margin-top: 60px;
+      position: relative;
+      z-index: 2;
+    }
 
-        .episode-title {
-            font-size: 2rem;
-            color: #fff;
-            margin: 10px 0;
-        }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 20px;
+      text-align: center;
+      line-height: 1.6;
+      font-size: 1.1rem;
+      position: relative;
+      z-index: 2;
+    }
 
-        .container {
-            width: 90%;
-            max-width: 800px;
-            margin: 0 auto;
-            text-align: left;
-        }
+    .typewriter {
+      display: inline-block;
+      font-weight: bold;
+      font-size: 1.1rem;
+      white-space: pre-wrap;
+      position: relative;
+      z-index: 2;
+    }
 
-        textarea, input[type="file"] {
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 1rem;
-            background-color: #333;
-            border: 1px solid #f39c12;
-            color: #fff;
-        }
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      background-color: #f39c12;
+      margin-left: 5px;
+      animation: blink 1s step-start infinite;
+    }
 
-        input[type="file"] {
-            background-color: #444;
-        }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
 
-        button {
-            background-color: #f39c12;
-            color: #000;
-            border: none;
-            padding: 10px 20px;
-            font-size: 1rem;
-            cursor: pointer;
-            border-radius: 5px;
-        }
+    .footer {
+      margin-top: 60px;
+      font-size: 0.9rem;
+      color: #aaa;
+      position: relative;
+      z-index: 2;
+    }
 
-        .creative-mode {
-            margin-top: 20px;
-            overflow: hidden;
-            height: 300px;
-            max-width: 800px;
-            background-color: #111;
-            border: 1px solid #f39c12;
-            border-radius: 5px;
-            position: relative;
-            margin: 0 auto;
-        }
+    .circle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 20px;
+      height: 20px;
+      background-color: #f39c12;
+      border-radius: 50%;
+      animation: pulse 2s infinite ease-in-out;
+      z-index: 3;
+    }
 
-        .creative-content img, .creative-content audio {
-            max-width: 150px;
-            max-height: 150px;
-            position: absolute;
-            border-radius: 5px;
-        }
-
-        .creative-content audio {
-            width: 150px;
-        }
-
-        .creative-content div {
-            position: absolute;
-            color: #fff;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-
-        .countdown-container {
-            margin-top: 20px;
-            text-align: center;
-            font-family: 'Oswald', sans-serif;
-            color: #fff;
-            font-size: 1.5rem;
-        }
-
-        #countdown-title {
-            font-size: 1.2rem;
-            margin-bottom: 5px;
-            color: #f39c12;
-        }
-
-        #countdown {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-
-        .error-message {
-            color: #ff6b6b;
-            font-size: 0.9rem;
-            margin-top: 5px;
-            display: none;
-        }
-
-        .success-message {
-            color: #4caf50;
-            font-size: 0.9rem;
-            margin-top: 5px;
-            display: none;
-        }
-    </style>
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.6; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
 </head>
 <body>
-    <h1>L'Altro Verdi</h1>
-    <h2 class="subheading-small">Zona Digitale Temporanea e Autonoma</h2>
-    <h3 class="episode-title">Epilogo: The Elephant Man</h3>
 
-    <div class="container">
-        <textarea id="message" placeholder="Scrivi qui il tuo messaggio..."></textarea>
-        <input type="file" id="file" accept="image/png, image/jpeg, audio/ogg, audio/mp3, audio/wav">
-        <button onclick="sendMessage()">Invia</button>
-        <div id="error-message" class="error-message"></div>
-        <div id="success-message" class="success-message"></div>
-    </div>
+  <h1>La Bacheca de "L'Altro Verdi"</h1>
 
-    <div class="creative-mode">
-        <div id="creative-content" class="creative-content">
-            <!-- Qui vengono caricati i contenuti -->
-        </div>
-    </div>
+  <div class="container">
+    <p><strong>È esistita per un tempo breve</strong></p>
 
-    <div class="countdown-container">
-        <h3 id="countdown-title"> </h3>
-        <div id="countdown"></div>
-    </div>
+    <p>una zona autonoma, digitale, temporanea</p>
 
-    <script>
-        const BACKEND_URL = "https://backlaltroverdi.glitch.me";
+    <p>Qualcunx ci ha scritto. Qualcunx ci ha letto.  <br>
+    La maggior parte la ha semplicemente attraversato (quando il server veniva acceso)</p> 
 
-        async function sendMessage() {
-            console.log("[LOG] Invio richiesta al backend...");
-            console.log("Backend URL:", BACKEND_URL);
+    <p>Ma lo spazio esisteva. Bastava?</p>
 
-            const message = document.getElementById('message').value;
-            const fileInput = document.getElementById('file');
-            const file = fileInput.files[0];
+    <p>Era una soglia collettiva  <br>
+    Un esperimento CoSAC</p>
 
-            if (!message && !file) {
-                showError("Devi fornire un messaggio o un file!");
-                return;
-            }
+    <p>Lì, tra commenti e stronzate,  <br>
+    <strong>Volevamo creare un glitch</strong>  <br>
+    e in quel glitch, cercavamo un affetto.</p>
 
-            let fileContent = null;
-            if (file) {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                await new Promise(resolve => { reader.onloadend = resolve; });
-                fileContent = reader.result.split(",")[1];
-            }
+    <p class="typewriter" id="typed"></p><span class="cursor"></span>
+  </div>
 
-            const payload = {
-                message: message.trim(),
-                filename: file ? file.name : null,
-                file_content: fileContent || null
-            };
+  <div class="footer">
+    Primavera 2025 — Cosac · Mademu<br>
+    Glitch e affetto, sempre.
+  </div>
 
-            try {
-                const response = await fetch(`${BACKEND_URL}/upload`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+  <div class="circle"></div>
 
-                const result = await response.json();
-                console.log("[LOG] Risposta dal backend:", result);
+  <script>
+    const text = "Cosac continuerà a cercare queste soglie.\nPerché la libertà è un muscolo";
+    const target = document.getElementById("typed");
+    let i = 0;
 
-                if (response.ok) {
-                    showSuccess('Messaggio inviato!');
-                    loadCreativeMode();
-                } else {
-                    showError(`Errore: ${result.error}`);
-                }
-            } catch (error) {
-                console.error("Errore durante l'invio:", error);
-                showError("ZzZz. Riprova più tardi");
-            }
-        }
+    function typeWriter() {
+      if (i < text.length) {
+        target.innerHTML += text.charAt(i);
+        i++;
+        const delay = Math.random() * (120 - 30) + 30;
+        setTimeout(typeWriter, delay);
+      }
+    }
 
-        function showError(message) {
-            const errorMessage = document.getElementById('error-message');
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            document.getElementById('success-message').style.display = 'none';
-        }
-
-        function showSuccess(message) {
-            const successMessage = document.getElementById('success-message');
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            document.getElementById('error-message').style.display = 'none';
-        }
-
-        async function loadCreativeMode() {
-            const creativeContent = document.getElementById('creative-content');
-            creativeContent.innerHTML = '';  // Reset del contenuto
-
-            try {
-                console.log("[LOG] Caricamento contenuti dalla modalità creativa...");
-                const response = await fetch(`${BACKEND_URL}/data`);
-                if (!response.ok) throw new Error('Errore nel recupero dei dati');
-
-                const data = await response.json();
-                console.log("[LOG] Dati ricevuti:", data);
-
-                data.forEach(item => {
-                    let element;
-                    if (item.type === 'comment') {
-                        element = document.createElement('div');
-                        element.textContent = item.message;
-                    } else if (item.type === 'image') {
-                        element = document.createElement('img');
-                        element.src = item.url;
-                    } else if (item.type === 'audio') {
-                        element = document.createElement('audio');
-                        element.src = item.url;
-                        element.autoplay = true;
-                        element.loop = true;
-                    }
-
-                    if (element) {
-                        element.classList.add('moving-element');
-                        creativeContent.appendChild(element);
-                    }
-                });
-
-                startBouncingElements();
-            } catch (error) {
-                console.error("Errore durante il caricamento della modalità creativa:", error);
-                showError("Sto un po' sfasatx, prova a riavviare la pagina");
-            }
-        }
-
-        function startBouncingElements() {
-            const container = document.querySelector('.creative-mode');
-            const elements = document.querySelectorAll('.moving-element');
-
-            elements.forEach(element => {
-                const rect = container.getBoundingClientRect();
-
-                // Imposta una posizione iniziale casuale
-                element.style.left = `${Math.random() * (rect.width - 150)}px`;
-                element.style.top = `${Math.random() * (rect.height - 150)}px`;
-
-                // Imposta una velocità iniziale casuale
-                const velocity = {
-                    x: (Math.random() - 0.5) * 2, // Velocità più lenta
-                    y: (Math.random() - 0.5) * 2
-                };
-
-                // Avvia l'animazione con setInterval
-                setInterval(() => {
-                    let x = parseFloat(element.style.left);
-                    let y = parseFloat(element.style.top);
-
-                    // Aggiorna le posizioni
-                    x += velocity.x;
-                    y += velocity.y;
-
-                    // Controlla i bordi e inverti la direzione se necessario
-                    if (x <= 0 || x + element.offsetWidth >= rect.width) {
-                        velocity.x *= -1;
-                    }
-                    if (y <= 0 || y + element.offsetHeight >= rect.height) {
-                        velocity.y *= -1;
-                    }
-
-                    // Applica le nuove posizioni
-                    element.style.left = `${x}px`;
-                    element.style.top = `${y}px`;
-                }, 50); // Intervallo di 50ms (20 fps)
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCreativeMode();
-            setInterval(loadCreativeMode, 10000);
-        });
-
-        function updateCountdown() {
-            const eventDate = new Date("2025-04-17T23:59:59").getTime();
-            const now = new Date().getTime();
-            const timeRemaining = eventDate - now;
-
-            if (timeRemaining <= 0) {
-                document.getElementById("countdown").innerHTML = "L'evento è iniziato!";
-                return;
-            }
-
-            const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-
-            document.getElementById("countdown").innerHTML =
-                `${days}g ${hours}h ${minutes}m ${seconds}s`;
-        }
-
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
-    </script>
+    document.addEventListener("DOMContentLoaded", typeWriter);
+  </script>
 </body>
 </html>
