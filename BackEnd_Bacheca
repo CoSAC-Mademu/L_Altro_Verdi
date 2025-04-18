@@ -1,0 +1,164 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import requests
+import os
+import json
+import base64
+from datetime import datetime
+from dotenv import load_dotenv
+import traceback
+import logging
+
+# Carica le variabili d'ambiente dal file .env
+load_dotenv()
+
+# Configura il logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})  # Permetti richieste da qualsiasi origine
+
+# Abilita il debug per vedere errori completi
+app.debug = False  # Disabilitato per ambiente di produzione
+
+# Recupera le variabili d'ambiente
+GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
+REPO_OWNER = "CoSAC-Mademu"
+REPO_NAME = "L_Altro_Verdi"
+BRANCH = "main"
+
+# Debug: verifica se il token è caricato correttamente
+if GITHUB_TOKEN:
+    logger.info(f"GITHUB_TOKEN caricato correttamente: {GITHUB_TOKEN[:4]}***")  # Maschera il token per sicurezza
+else:
+    logger.error("ERRORE: GITHUB_TOKEN non trovato nelle variabili d'ambiente!")
+
+BASE_URL = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents"
+
+@app.route('/')
+def home():
+    return jsonify({'message': 'Server attivo! 🚀'}), 200
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    try:
+        data = request.json
+        message = data.get('message', '').strip()
+        filename = data.get('filename')
+        file_content = data.get('file_content')
+
+        if not message and not filename:
+            return jsonify({'error': 'Dati mancanti', 'error_type': 'missing_data'}), 400
+
+        if message:
+            comments_url = f"{BASE_URL}/comments.json"
+            response = _update_file(comments_url, message, 'comments.json')
+            if not response or response.status_code >= 400:
+                logger.error(f"Errore durante l'aggiornamento dei commenti: {response.status_code} - {response.text}")
+                return jsonify({'error': 'Errore durante l\'aggiornamento dei commenti', 'error_type': 'github_error'}), 500
+
+        if filename and file_content:
+            file_extension = os.path.splitext(filename)[1].lower()
+            folder = "images" if file_extension in ['.png', '.jpg', '.jpeg'] else "audio"
+            file_path = f"{folder}/{filename}"
+            response = _update_file(f"{BASE_URL}/{file_path}", file_content, file_path, binary=True)
+            if not response or response.status_code >= 400:
+                logger.error(f"Errore durante l'upload del file: {response.status_code} - {response.text}")
+                return jsonify({'error': 'Errore durante l\'upload del file', 'error_type': 'github_error'}), 500
+
+        return jsonify({'message': 'Contenuto aggiunto con successo!'}), 200
+    except Exception as e:
+        logger.error(f"Errore durante l'upload: {e}", exc_info=True)
+        return jsonify({'error': str(e), 'error_type': 'server_error'}), 500
+
+@app.route('/data', methods=['GET'])
+def get_data():
+    try:
+        contents = []
+
+        # Recupera commenti
+        comments_data, _ = _get_file_data("comments.json")
+        if comments_data:
+            comments = json.loads(comments_data)
+            contents.extend([{"type": "comment", "message": c['message'], "date": c['date']} for c in comments])
+
+        # Recupera immagini
+        contents.extend(_get_directory_files("images", "image"))
+
+        # Recupera audio
+        contents.extend(_get_directory_files("audio", "audio"))
+
+        return jsonify(contents), 200
+    except Exception as e:
+        logger.error(f"Errore durante il recupero dei dati: {e}", exc_info=True)
+        return jsonify({'error': 'Errore durante il recupero dei dati', 'error_type': 'server_error'}), 500
+
+def _get_headers():
+    return {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+def _get_file_data(path):
+    try:
+        response = requests.get(f"{BASE_URL}/{path}", headers=_get_headers())
+        if response.status_code == 200:
+            return base64.b64decode(response.json()['content']).decode(), response.json()['sha']
+        elif response.status_code == 404:
+            logger.info(f"File {path} non trovato. Creando il file.")
+            return None, None
+        else:
+            logger.error(f"Errore nel recupero del file {path}: {response.status_code}")
+            return None, None
+    except Exception as e:
+        logger.error(f"Errore nel recupero del file {path}: {e}", exc_info=True)
+        return None, None
+
+def _get_directory_files(folder, filetype):
+    try:
+        response = requests.get(f"{BASE_URL}/{folder}", headers=_get_headers())
+        if response.status_code == 200:
+            return [{"type": filetype, "url": f['download_url']} for f in response.json() if f['type'] == 'file']
+        return []
+    except Exception as e:
+        logger.error(f"Errore nel recupero della directory {folder}: {e}", exc_info=True)
+        return []
+
+def _update_file(file_url, content, filename, binary=False):
+    """
+    Aggiorna o crea un file su GitHub.
+    """
+    try:
+        existing_data, sha = _get_file_data(filename)
+
+        if binary:
+            encoded_content = base64.b64encode(base64.b64decode(content)).decode()
+        else:
+            if existing_data:
+                data = json.loads(existing_data)
+            else:
+                data = []
+
+            data.append({"message": content, "date": datetime.utcnow().isoformat()})
+            encoded_content = base64.b64encode(json.dumps(data, indent=2).encode()).decode()
+
+        payload = {
+            "message": f"Aggiornato {filename}",
+            "content": encoded_content,
+            "branch": BRANCH
+        }
+
+        if sha:
+            payload["sha"] = sha
+
+        headers = _get_headers()
+        response = requests.put(file_url, headers=headers, json=payload)
+        return response
+    except Exception as e:
+        logger.error(f"Errore nell'aggiornamento del file {filename}: {e}", exc_info=True)
+        return None
+
+if __name__ == '__main__':
+    PORT = int(os.getenv("PORT", 8080))
+    app.run(host="0.0.0.0", port=PORT)
